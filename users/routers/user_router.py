@@ -1,55 +1,50 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Union, Annotated
 from sqlalchemy.orm import Session
 from shared.dependencies import get_db
 from users.models.user_model import User
+from users.schemas import UserRequest, UserResponse
+from users import crud
 
 router = APIRouter(prefix="/users")
 
-class UserResponse(BaseModel):
-    id: int
-    email: str
-    senha: str
-    nome: str
-    idade: int
-    genero: int # numero entre 0 e 3 (Masculino, Feminino, Nao Binario, Outro)
-    estado: str # abreviatura (ex: MA, SP, BA)
-    cidade: str
-    trilha: int #numero entre 0 e 5 (NAO, Back, Front, Dados, Design, Jogos)
-    conhece_a_cultura: int # numero entre 0 e 2 (bom, basico, NAO)
-    mais_se_interessa: int # numero entre 0 e 7 (Bumba meu boi, Cacuriá, Tambor de crioula, Reggae maranhense,Artesanato, Culinária, Literatura, História)
-
-class UserRequest(BaseModel):
-    email: str
-    senha: str
-    nome: str
-    idade: int
-    genero: int
-    estado: str
-    cidade: str
-    trilha: int
-    conhece_a_cultura: int
-    mais_se_interessa: int
-
-
 @router.post("/create-user", response_model=UserResponse, status_code=201)
-def criar_usuario(new_user_request: UserRequest,
+def create_user(new_user_request: UserRequest,
                   db: Session = Depends(get_db)) -> UserResponse:
 
-    new_user = User(
-        **new_user_request.model_dump()
-    )
-    #new_user.senha = criptografar(new_user.senha) #não esquecer
+    if not crud.exists_by_email(email=new_user_request.email, db=db):
+        raise HTTPException(status_code=400, detail="Email already registered")
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    return crud.create_user(db=db, user=new_user_request)
 
-    return UserResponse(
-        **new_user.__dict__
-    )
 
-@router.get("/list-users", response_model=List[UserResponse])
-def listar_usuarios(db: Session = Depends(get_db)) -> List[UserResponse]:
-    return db.query(User).all()
+@router.get("/", response_model=List[UserResponse])
+def list_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)) -> List[UserResponse]:
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return users
+
+
+@router.get("/{user_id}", response_model=UserResponse)
+def read_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
+    db_user = crud.get_user(user_id=user_id, db=db)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+
+@router.put("/update-user", response_model=UserResponse)
+def update_user(updated_user: UserResponse, db: Session = Depends(get_db)) -> UserResponse:
+    db_user = crud.get_user(user_id=updated_user.id, db=db)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return crud.update_user(db=db, user=User(**updated_user.model_dump()))
+
+
+@router.delete("/{user_id}", response_model=UserResponse)
+def delete_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
+    db_user = crud.get_user(user_id=user_id, db=db)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return crud.delete_user(user=db_user, db=db)
