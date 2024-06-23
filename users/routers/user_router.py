@@ -12,7 +12,7 @@ router = APIRouter(prefix="/users")
 def create_user(new_user_request: UserRequest,
                   db: Session = Depends(get_db)) -> UserResponse:
 
-    if not crud.exists_by_email(email=new_user_request.email, db=db):
+    if crud.exists_by_email(email=new_user_request.email, db=db):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     return crud.create_user(db=db, user=new_user_request)
