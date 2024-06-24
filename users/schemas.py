@@ -24,3 +24,6 @@ class UserRequest(BaseModel):
     trilha: int = Field(ge=0, le=5) #numero entre 0 e 5 (NAO, Back, Front, Dados, Design, Jogos)
     conhece_a_cultura: int = Field(ge=0, le=2) # numero entre 0 e 2 (bom, basico, NAO)
     mais_se_interessa: int = Field(ge=0, le=7) # numero entre 0 e 7 (Bumba meu boi, Cacuriá, Tambor de crioula, Reggae maranhense,Artesanato, Culinária, Literatura, História)
+
+class UserUpdateRequest(UserRequest): # inherits the request class and all field validations, but includes id to identify instance
+    id: int
