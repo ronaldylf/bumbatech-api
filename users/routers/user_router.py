@@ -3,7 +3,7 @@ from typing import List, Union, Annotated
 from sqlalchemy.orm import Session
 from shared.dependencies import get_db
 from users.models.user_model import User
-from users.schemas import UserRequest, UserResponse
+from users.schemas import UserRequest, UserResponse, UserUpdateRequest
 from users import crud
 
 router = APIRouter(prefix="/users")
@@ -33,7 +33,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
 
 
 @router.put("/update-user", response_model=UserResponse)
-def update_user(updated_user: UserResponse, db: Session = Depends(get_db)) -> UserResponse:
+def update_user(updated_user: UserUpdateRequest, db: Session = Depends(get_db)) -> UserResponse:
     db_user = crud.get_user(user_id=updated_user.id, db=db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
