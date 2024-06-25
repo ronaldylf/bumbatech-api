@@ -27,3 +27,7 @@ class UserRequest(BaseModel):
 
 class UserUpdateRequest(UserRequest): # inherits the request class and all field validations, but includes id to identify instance
     id: int
+
+class UserCheckLogin(BaseModel):
+    email: str
+    senha: str
