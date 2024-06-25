@@ -49,9 +49,9 @@ def delete_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
     
     return crud.delete_user(user=db_user, db=db)
 
-@router.post("/check_user_by_email")
-def check_login_by_game(user_login: UserCheckLogin, db: Session = Depends(get_db)) -> str:
+@router.post("/check_user_by_email", response_model=UserResponse)
+def check_login_by_game(user_login: UserCheckLogin, db: Session = Depends(get_db)) -> UserResponse:
     db_user = db.query(User).filter(User.email == user_login.email, User.senha == user_login.senha).first()
     if db_user is None:
-        return "FALSE"
-    return "TRUE"
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
