@@ -3,7 +3,7 @@ from typing import List, Union, Annotated
 from sqlalchemy.orm import Session
 from shared.dependencies import get_db
 from users.models.user_model import User
-from users.schemas import UserRequest, UserResponse, UserUpdateRequest
+from users.schemas import UserRequest, UserResponse, UserUpdateRequest, UserCheckLogin
 from users import crud
 
 router = APIRouter(prefix="/users")
@@ -50,8 +50,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
     return crud.delete_user(user=db_user, db=db)
 
 @router.post("/check_user_by_email")
-def check_login_by_game(m_email: str, m_senha: str, db: Session = Depends(get_db)) -> str:
-    db_user = db.query(User).filter(User.email == m_email, User.senha == m_senha).first()
+def check_login_by_game(user_login: UserCheckLogin, db: Session = Depends(get_db)) -> str:
+    db_user = db.query(User).filter(User.email == user_login.email, User.senha == user_login.senha).first()
     if db_user is None:
         return "FALSE"
     return "TRUE"
