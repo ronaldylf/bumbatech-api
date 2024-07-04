@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 #import uvicorn
 from users.routers import user_router
+
+from autentication import scheme
 
 app = FastAPI(
     title="BumbatechAPI",
@@ -11,7 +13,7 @@ app = FastAPI(
 def home():
     return "Bumbatech"
 
-app.include_router(user_router.router)
+app.include_router(user_router.router, dependencies=[Depends(scheme.check_access_token)])
 
 '''
 if __name__ == '__main__':
